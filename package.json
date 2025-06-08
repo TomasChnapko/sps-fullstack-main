@@ -1,0 +1,26 @@
+{
+  "name": "package.json",
+  "version": "1.0.0",
+  "description": "Parking place",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js",
+    "seed": "node database/seed.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TomasChnapko/sps-fullstack.git"
+  },
+  "author": "Tomáš Chňapko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TomasChnapko/sps-fullstack/issues"
+  },
+  "homepage": "https://github.com/TomasChnapko/sps-fullstack#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "sqlite3": "^5.1.7"
+  }
+}

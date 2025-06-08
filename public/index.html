@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parkovací systém</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1em;
+      text-align: center;
+    }
+
+    main {
+      padding: 2em;
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    .parking-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1em;
+    }
+
+    .parking-spot {
+      background-color: white;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .parking-spot.taken {
+      background-color: #ffe6e6;
+    }
+
+    .parking-spot.free {
+      background-color: #e6ffe6;
+    }
+
+    .refresh-btn {
+      margin-bottom: 1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background-color: #2980b9;
+    }
+
+    #parkForm {
+      display: none;
+      margin-bottom: 2em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+    }
+
+    #parkForm h3 {
+      margin-top: 0;
+    }
+
+    #parkForm input {
+      display: block;
+      width: 100%;
+      margin: 0.5em 0;
+      padding: 0.7em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #parkForm button {
+      padding: 0.7em;
+      font-size: 1em;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #parkForm button[type="button"] {
+      background-color: #e74c3c;
+    }
+
+    #parkForm button:hover {
+      background-color: #27ae60;
+    }
+
+    #parkForm button[type="button"]:hover {
+      background-color: #c0392b;
+    }
+
+    #parkingGrid {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 12px;
+      margin-top: 2em;
+      margin-bottom: 2em;
+    }
+
+    #parkingGrid button {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1.1em;
+      border: 2px solid #2c3e50;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚗 Parkovací systém</h1>
+  </header>
+  <main>
+    <button class="refresh-btn" onclick="loadParking()">🔄 Načíst místa</button>
+    <button class="refresh-btn" onclick="showParkForm()">➕ Zaparkovat auto</button>
+    <h2>Seznam parkovacích míst</h2>
+    <div id="parkForm" style="display:none; margin-bottom:2em; background:#fff; padding:1em; border-radius:8px;">
+      <h3>Zaparkovat auto</h3>
+      <form id="formZaparkovat" onsubmit="submitParkForm(event)">
+        <select name="parkovaci_misto" required style="display:block;width:100%;margin:0.5em 0;padding:0.7em;border:1px solid #ccc;border-radius:4px;">
+          <option value="" disabled selected hidden>Vyberte místo (1-16)</option>
+          <option value="1">Místo 1</option>
+          <option value="2">Místo 2</option>
+          <option value="3">Místo 3</option>
+          <option value="4">Místo 4</option>
+          <option value="5">Místo 5</option>
+          <option value="6">Místo 6</option>
+          <option value="7">Místo 7</option>
+          <option value="8">Místo 8</option>
+          <option value="9">Místo 9</option>
+          <option value="10">Místo 10</option>
+          <option value="11">Místo 11</option>
+          <option value="12">Místo 12</option>
+          <option value="13">Místo 13</option>
+          <option value="14">Místo 14</option>
+          <option value="15">Místo 15</option>
+          <option value="16">Místo 16</option>
+        </select>
+        <select name="patro" required style="display:block;width:100%;margin:0.5em 0;padding:0.7em;border:1px solid #ccc;border-radius:4px;">
+          <option value="" disabled selected hidden>Vyberte patro</option>
+          <option value="0">Patro 0</option>
+          <option value="1">Patro 1</option>
+          <option value="2">Patro 2</option>
+          <option value="3">Patro 3</option>
+        </select>
+        <input name="SPZ" placeholder="SPZ" required />
+        <input name="typ" placeholder="Typ auta" required />
+        <input name="majitel" placeholder="Majitel" required />
+        <input name="barva" placeholder="Barva" required />
+        <button type="submit">Zaparkovat</button>
+        <button type="button" onclick="hideParkForm()">Zrušit</button>
+      </form>
+      <div id="formMsg"></div>
+    </div>
+    <div class="parking-list" id="parkingList">
+      <!-- Parkovací místa se načtou sem -->
+    </div>
+    <h2>Grafické rozložení parkoviště</h2>
+    <div style="margin-bottom:1em;">
+      <label for="patroSelect"><strong>Vyber patro:</strong></label>
+      <select id="patroSelect" onchange="renderParkingGrid(lastParkingData)">
+        <option value="0">Patro 0</option>
+        <option value="1">Patro 1</option>
+        <option value="2">Patro 2</option>
+        <option value="3">Patro 3</option>
+      </select>
+    </div>
+    <div id="parkingGrid" style="display:grid;grid-template-columns:repeat(4,60px);gap:12px;margin-top:2em;margin-bottom:2em;"></div>
+  </main>
+
+  <script>
+    // Uloží poslední načtená místa pro grid
+    let lastParkingData = [];
+
+    async function loadParking() {
+      const container = document.getElementById('parkingList');
+      container.innerHTML = '⏳ Načítám...';
+
+      try {
+        const res = await fetch('/api/parkovani?t=' + new Date().getTime());
+        const data = await res.json();
+
+        if (!Array.isArray(data)) throw new Error('Neplatná odpověď');
+
+        lastParkingData = data; // pro grid
+
+        container.innerHTML = '';
+        data.forEach(misto => {
+          const el = document.createElement('div');
+          el.className = 'parking-spot ' + (misto.zabrano ? 'taken' : 'free');
+          el.innerHTML = `
+            <h3>Místo: ${misto.parkovaci_misto}</h3>
+            <p>Patro: ${misto.patro}</p>
+            <p>Status: <strong>${misto.zabrano ? 'Zabrané' : 'Volné'}</strong></p>
+            <p>ID: ${misto.id}</p>
+            <button onclick="showDetail(${misto.id})">Detail</button>
+            ${misto.zabrano ? `<button onclick="odjet(${misto.id})">Odjet</button>` : ''}
+            <button onclick="smazat(${misto.id})">Smazat</button>
+          `;
+          container.appendChild(el);
+        });
+
+        renderParkingGrid(data);
+      } catch (err) {
+        container.innerHTML = `<p style="color: red;">Chyba při načítání dat: ${err.message}</p>`;
+      }
+    }
+
+    function renderParkingGrid(data) {
+      const grid = document.getElementById('parkingGrid');
+      const patro = Number(document.getElementById('patroSelect').value);
+      grid.innerHTML = '';
+      // Předpokládáme 16 míst na patro (4x4)
+      for (let i = 1; i <= 16; i++) {
+        const misto = data.find(m => Number(m.parkovaci_misto) === i && Number(m.patro) === patro);
+        const btn = document.createElement('button');
+        btn.style.width = '60px';
+        btn.style.height = '60px';
+        btn.style.borderRadius = '8px';
+        btn.style.fontWeight = 'bold';
+        btn.style.fontSize = '1.1em';
+        btn.style.border = '2px solid #2c3e50';
+        btn.style.background = misto
+          ? (misto.zabrano ? '#ffe6e6' : '#e6ffe6')
+          : '#eee';
+        btn.textContent = i;
+        btn.title = misto
+          ? `Místo ${i} (${misto.zabrano ? 'Zabrané' : 'Volné'})`
+          : `Místo ${i} (neexistuje v DB)`;
+        if (misto && misto.zabrano) {
+          btn.onclick = () => showDetail(misto.id);
+        } else if (misto && !misto.zabrano) {
+          btn.onclick = () => parkovatNaMiste(misto.parkovaci_misto, misto.patro);
+        } else {
+          // Pokud místo není v DB, umožni také přidání auta na toto místo a patro
+          btn.onclick = () => parkovatNaMiste(i, patro);
+        }
+        grid.appendChild(btn);
+      }
+    }
+
+    function parkovatNaMiste(parkovaci_misto, patro) {
+      showParkForm();
+      // Nastav hodnoty ve formuláři
+      const selectMisto = document.querySelector('#formZaparkovat [name="parkovaci_misto"]');
+      const selectPatro = document.querySelector('#formZaparkovat [name="patro"]');
+      selectMisto.value = parkovaci_misto;
+      selectPatro.value = patro;
+    }
+
+    function showParkForm() {
+      document.getElementById('parkForm').style.display = 'block';
+      document.getElementById('formZaparkovat').reset();
+      document.getElementById('formMsg').innerText = '';
+    }
+    function hideParkForm() {
+      document.getElementById('parkForm').style.display = 'none';
+    }
+    async function submitParkForm(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+      document.getElementById('formMsg').innerText = '⏳ Odesílám...';
+      try {
+        const res = await fetch('/api/zaparkovat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Chyba');
+        document.getElementById('formMsg').innerText = '✅ Auto zaparkováno!';
+        hideParkForm();
+        loadParking();
+      } catch (err) {
+        document.getElementById('formMsg').innerText = '❌ ' + err.message;
+      }
+    }
+
+    async function showDetail(id) {
+      const detail = await fetch(`/api/detail/${id}`).then(r => r.json());
+      alert(
+        detail.error
+          ? 'Chyba: ' + detail.error
+          : `Místo: ${detail.parkovaci_misto}\nPatro: ${detail.patro}\nStatus: ${detail.zabrano ? 'Zabrané' : 'Volné'}\nSPZ: ${detail.SPZ || '-'}\nTyp: ${detail.typ || '-'}\nMajitel: ${detail.majitel || '-'}\nBarva: ${detail.barva || '-'}\nČas zaparkování: ${detail.cas_zaparkovani || '-'}\nČas odjezdu: ${detail.cas_odjezdu || '-'}`
+      );
+    }
+
+    async function odjet(id) {
+      if (!confirm('Opravdu označit auto jako odjeté?')) return;
+      await fetch(`/api/odjet/${id}`, { method: 'PUT' });
+      loadParking();
+    }
+
+    async function smazat(id) {
+      if (!confirm('Opravdu smazat tento záznam?')) return;
+      await fetch(`/api/smazat/${id}`, { method: 'DELETE' });
+      loadParking();
+    }
+
+    window.onload = loadParking;
+  </script>
+</body>
+</html>
