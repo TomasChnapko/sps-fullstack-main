@@ -7,14 +7,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f6f8;
+      background-color: #fff;
       margin: 0;
       padding: 0;
     }
 
     header {
-      background-color: #2c3e50;
-      color: white;
+      background-color: #157F1F;
+      color: #A0EADE;
       padding: 1em;
       text-align: center;
     }
@@ -24,7 +24,7 @@
     }
 
     h2 {
-      color: #2c3e50;
+      color: #157F1F;
     }
 
     .parking-list {
@@ -34,33 +34,41 @@
     }
 
     .parking-spot {
-      background-color: white;
+      background-color: #fff;
       padding: 1em;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 5px rgba(29,38,59,0.08);
+      border: 1.5px solid #4CB963;
+      color: #1D263B;
     }
 
     .parking-spot.taken {
-      background-color: #ffe6e6;
+      background-color: #4CB963;
+      color: #1D263B;
+      border-color: #157F1F;
     }
 
     .parking-spot.free {
-      background-color: #e6ffe6;
+      background-color: #fff;
+      color: #1D263B;
+      border-color: #4CB963;
     }
 
     .refresh-btn {
       margin-bottom: 1em;
       padding: 0.5em 1em;
       font-size: 1em;
-      background-color: #3498db;
-      color: white;
+      background-color: #157F1F;
+      color: #A0EADE;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: background 0.2s;
     }
 
     .refresh-btn:hover {
-      background-color: #2980b9;
+      background-color: #4CB963;
+      color: #1D263B;
     }
 
     #parkForm {
@@ -69,41 +77,73 @@
       background: #fff;
       padding: 1em;
       border-radius: 8px;
+      border: 1.5px solid #4CB963;
+      color: #1D263B;
     }
 
     #parkForm h3 {
       margin-top: 0;
+      color: #157F1F;
     }
 
-    #parkForm input {
+    #parkForm input,
+    #parkForm select {
       display: block;
       width: 100%;
       margin: 0.5em 0;
       padding: 0.7em;
-      border: 1px solid #ccc;
+      border: 1px solid #4CB963;
       border-radius: 4px;
+      box-sizing: border-box;
+      background: #fff;
+      color: #1D263B;
     }
 
     #parkForm button {
       padding: 0.7em;
       font-size: 1em;
-      background-color: #2ecc71;
-      color: white;
+      background-color: #157F1F;
+      color: #A0EADE;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      margin-right: 0.5em;
+      transition: background 0.2s;
     }
 
     #parkForm button[type="button"] {
-      background-color: #e74c3c;
+      background-color: #4CB963;
+      color: #1D263B;
     }
 
     #parkForm button:hover {
-      background-color: #27ae60;
+      background-color: #5C6784;
+      color: #A0EADE;
     }
 
     #parkForm button[type="button"]:hover {
-      background-color: #c0392b;
+      background-color: #1D263B;
+      color: #A0EADE;
+    }
+
+    .parking-grid-section {
+      background: #fff;
+      margin: 24px auto;
+      padding: 24px 32px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(29,38,59,0.08);
+      max-width: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1.5px solid #4CB963;
+    }
+
+    .parking-grid-title {
+      margin-bottom: 16px;
+      font-size: 1.2em;
+      color: #157F1F;
+      text-align: center;
     }
 
     #parkingGrid {
@@ -112,6 +152,7 @@
       gap: 12px;
       margin-top: 2em;
       margin-bottom: 2em;
+      justify-content: center;
     }
 
     #parkingGrid button {
@@ -120,8 +161,16 @@
       border-radius: 8px;
       font-weight: bold;
       font-size: 1.1em;
-      border: 2px solid #2c3e50;
+      border: 2px solid #157F1F;
       cursor: pointer;
+      background: #fff;
+      color: #1D263B;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+    }
+    #parkingGrid button:hover {
+      background: #4CB963;
+      color: #1D263B;
+      border-color: #5C6784;
     }
   </style>
 </head>
@@ -136,7 +185,7 @@
     <div id="parkForm" style="display:none; margin-bottom:2em; background:#fff; padding:1em; border-radius:8px;">
       <h3>Zaparkovat auto</h3>
       <form id="formZaparkovat" onsubmit="submitParkForm(event)">
-        <select name="parkovaci_misto" required style="display:block;width:100%;margin:0.5em 0;padding:0.7em;border:1px solid #ccc;border-radius:4px;">
+        <select name="parkovaci_misto" required>
           <option value="" disabled selected hidden>Vyberte místo (1-16)</option>
           <option value="1">Místo 1</option>
           <option value="2">Místo 2</option>
@@ -155,7 +204,7 @@
           <option value="15">Místo 15</option>
           <option value="16">Místo 16</option>
         </select>
-        <select name="patro" required style="display:block;width:100%;margin:0.5em 0;padding:0.7em;border:1px solid #ccc;border-radius:4px;">
+        <select name="patro" required>
           <option value="" disabled selected hidden>Vyberte patro</option>
           <option value="0">Patro 0</option>
           <option value="1">Patro 1</option>
@@ -174,17 +223,19 @@
     <div class="parking-list" id="parkingList">
       <!-- Parkovací místa se načtou sem -->
     </div>
-    <h2>Grafické rozložení parkoviště</h2>
-    <div style="margin-bottom:1em;">
-      <label for="patroSelect"><strong>Vyber patro:</strong></label>
-      <select id="patroSelect" onchange="renderParkingGrid(lastParkingData)">
-        <option value="0">Patro 0</option>
-        <option value="1">Patro 1</option>
-        <option value="2">Patro 2</option>
-        <option value="3">Patro 3</option>
-      </select>
+    <div class="parking-grid-section">
+      <div class="parking-grid-title">Grafické rozložení parkoviště</div>
+      <div style="margin-bottom:1em;">
+        <label for="patroSelect"><strong>Vyber patro:</strong></label>
+        <select id="patroSelect" onchange="renderParkingGrid(lastParkingData)">
+          <option value="0">Patro 0</option>
+          <option value="1">Patro 1</option>
+          <option value="2">Patro 2</option>
+          <option value="3">Patro 3</option>
+        </select>
+      </div>
+      <div id="parkingGrid"></div>
     </div>
-    <div id="parkingGrid" style="display:grid;grid-template-columns:repeat(4,60px);gap:12px;margin-top:2em;margin-bottom:2em;"></div>
   </main>
 
   <script>
@@ -238,7 +289,7 @@
         btn.style.borderRadius = '8px';
         btn.style.fontWeight = 'bold';
         btn.style.fontSize = '1.1em';
-        btn.style.border = '2px solid #2c3e50';
+        btn.style.border = '2px solid #157F1F';
         btn.style.background = misto
           ? (misto.zabrano ? '#ffe6e6' : '#e6ffe6')
           : '#eee';
